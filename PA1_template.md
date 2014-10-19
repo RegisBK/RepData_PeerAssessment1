@@ -11,14 +11,32 @@ output:
 ## Loading and preprocessing the data
 First, install necessary packages. Knitr to create this html output file, dplyr for data manipulation, and lattice for the final panel plot.
 
-```{r}
+
+```r
 library(knitr)
 library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+## 
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+## 
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 library(lattice)
 ```
 Then, load activity data set from working directory and assign column classes.
 
-```{r}
+
+```r
 activity<-read.csv("activity.csv", colClasses=c("numeric", "Date", "numeric"))
 ```
 
@@ -26,30 +44,47 @@ activity<-read.csv("activity.csv", colClasses=c("numeric", "Date", "numeric"))
 
 To answer this question, first group data by date so that a sum can be calculated.
 
-```{r}
+
+```r
 dailysteps<-group_by(activity, date)
 ```
 
 Then, use the total steps for each date to create a histogram.
 
-```{r}
+
+```r
 total_dailysteps<-summarise(dailysteps, sum(steps))
 hist(total_dailysteps[,2], main = "Histogram of Daily Step Totals",
      xlab ="Daily Step Totals")
 ```
 
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
+
 Finally, calculate the mean and median. Based on the histogram, these should be between 10,000 and 15,000 steps since this is the bin with the greatest frequency (over 25 of the 61 days).
 
-```{r}
+
+```r
 mean(total_dailysteps[,2], na.rm=TRUE)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(total_dailysteps[,2], na.rm=TRUE)
+```
+
+```
+## [1] 10765
 ```
 
 ## What is the average daily activity pattern?
 
 First, group the data by intervals. Then find the average for each interval and graph it.
 
-```{r}
+
+```r
 intervalsteps<-group_by(activity, interval)
 avg_intervalsteps<-summarise(intervalsteps, mean(steps, na.rm=TRUE))
 plot(avg_intervalsteps[,1], avg_intervalsteps[,2], type="l", 
@@ -59,22 +94,38 @@ plot(avg_intervalsteps[,1], avg_intervalsteps[,2], type="l",
      ylab="Average Number of Steps")
 ```
 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png) 
+
 Lastly, identify the interval with the maximum average. Based on the plot, this should be around interval 800.
 
-```{r}
+
+```r
 filter(avg_intervalsteps, avg_intervalsteps[,2]==max(avg_intervalsteps[,2]))
+```
+
+```
+## Source: local data frame [1 x 2]
+## 
+##   interval mean(steps, na.rm = TRUE)
+## 1      835                  206.1698
 ```
 
 ##Imputing missing values
 
 First, determine the number of missing cases.
-```{r}
+
+```r
 sum(!complete.cases(activity))
+```
+
+```
+## [1] 2304
 ```
 
 Then, replace missing values with the average for that interval. Use the imputed values to create a new data set to replace the existing data set.
 
-```{r}
+
+```r
 impute<-mutate(intervalsteps, interval.avg = mean(steps, na.rm=TRUE))
 step.na <- is.na(impute$steps)
 impute$steps[step.na] <- impute$interval.avg[step.na]
@@ -83,7 +134,8 @@ activity<-select(impute, steps, date, interval)
 
 Finally, group the new data set by date and create another histogram of daily step totals.
 
-```{r}
+
+```r
 dailysteps<-group_by(activity, date)
 total_dailysteps<-summarise(dailysteps, sum(steps))
 hist(total_dailysteps[,2], main = "Histogram of Daily Step Total 
@@ -91,20 +143,35 @@ hist(total_dailysteps[,2], main = "Histogram of Daily Step Total
      xlab ="Daily Step Totals")
 ```
 
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
+
 Since the missing values were replaced with interval averages, many more days now have totals around the average. The frequency count for the interval containing the mean and median has increased to over 35. 
 
 Checking the mean and median values of the imputed data set show they they are identical after imputing.
 
-```{r}
+
+```r
 mean(total_dailysteps[,2], na.rm=TRUE)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(total_dailysteps[,2], na.rm=TRUE)
+```
+
+```
+## [1] 10766.19
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
 First, convert dates to days of the week and use this to create a new column ("sort") for assigning each as weekday or weekend. Then, assign as a factor.
 
-```{r}
+
+```r
 activity$sort<-ifelse(!weekdays(as.Date(activity$date)) %in% 
                               c("Saturday", "Sunday"),"weekday","weekend")
 activity$sort<-as.factor(activity$sort)
@@ -112,7 +179,8 @@ activity$sort<-as.factor(activity$sort)
 
 Now group the data by weekday or weekend, and by time interval. Find the average for each interval for weekdays and weekends. Finally, create a panel plot to compare activity patterns between weekdays and weekends.
 
-```{r}
+
+```r
 groupedsteps<-group_by(activity, sort, interval)
 totalgroupedsteps<-summarise(groupedsteps, mean(steps))
 xyplot(totalgroupedsteps[,3] ~ totalgroupedsteps[,2] | sort, 
@@ -121,3 +189,5 @@ xyplot(totalgroupedsteps[,3] ~ totalgroupedsteps[,2] | sort,
        ylab ="Average Number of Steps", 
        main = "Average Daily Activity Pattern")
 ```
+
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png) 
