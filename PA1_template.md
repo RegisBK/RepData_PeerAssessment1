@@ -1,10 +1,11 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
+title: 'Reproducible Research: Peer Assessment 1'
 author: "RegisBK"
 date: "October 19, 2014"
-output: 
+output:
   html_document:
-    keep_md: true
+    keep_md: yes
+  pdf_document: default
 ---
 
 
@@ -15,22 +16,6 @@ First, install necessary packages. Knitr to create this html output file, dplyr 
 ```r
 library(knitr)
 library(dplyr)
-```
-
-```
-## 
-## Attaching package: 'dplyr'
-## 
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-## 
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-```
-
-```r
 library(lattice)
 ```
 Then, load activity data set from working directory and assign column classes.
@@ -49,12 +34,13 @@ To answer this question, first group data by date so that a sum can be calculate
 dailysteps<-group_by(activity, date)
 ```
 
-Then, use the total steps for each date to create a histogram.
+Then, use the total steps for each date to create a histogram. First converting the summarize output to a numeric vector.
 
 
 ```r
-total_dailysteps<-summarise(dailysteps, sum(steps))
-hist(total_dailysteps[,2], main = "Histogram of Daily Step Totals",
+total_dailysteps<-summarize(dailysteps, sum(steps))
+num_total<-unlist(total_dailysteps[,2])
+hist(num_total, main = "Histogram of Daily Step Totals",
      xlab ="Daily Step Totals")
 ```
 
@@ -64,7 +50,7 @@ Finally, calculate the mean and median. Based on the histogram, these should be 
 
 
 ```r
-mean(total_dailysteps[,2], na.rm=TRUE)
+mean(num_total, na.rm=TRUE)
 ```
 
 ```
@@ -72,7 +58,7 @@ mean(total_dailysteps[,2], na.rm=TRUE)
 ```
 
 ```r
-median(total_dailysteps[,2], na.rm=TRUE)
+median(num_total, na.rm=TRUE)
 ```
 
 ```
@@ -86,8 +72,10 @@ First, group the data by intervals. Then find the average for each interval and 
 
 ```r
 intervalsteps<-group_by(activity, interval)
-avg_intervalsteps<-summarise(intervalsteps, mean(steps, na.rm=TRUE))
-plot(avg_intervalsteps[,1], avg_intervalsteps[,2], type="l", 
+avg_intervalsteps<-summarize(intervalsteps, mean(steps, na.rm=TRUE))
+interval<-unlist(avg_intervalsteps[,1])
+num_avg<-unlist(avg_intervalsteps[,2])
+plot(interval, num_avg, type="l", 
      main = "Average Daily Activity Pattern", 
      sub = "From Oct 1, 2012 to Nov 30, 2012", 
      xlab = "5-Minute Interval Throughout Day", 
@@ -138,7 +126,8 @@ Finally, group the new data set by date and create another histogram of daily st
 ```r
 dailysteps<-group_by(activity, date)
 total_dailysteps<-summarise(dailysteps, sum(steps))
-hist(total_dailysteps[,2], main = "Histogram of Daily Step Total 
+num_total<-unlist(total_dailysteps[,2])
+hist(num_total, main = "Histogram of Daily Step Total 
      with NA step values imputed from interval averages",
      xlab ="Daily Step Totals")
 ```
@@ -151,7 +140,7 @@ Checking the mean and median values of the imputed data set show they they are i
 
 
 ```r
-mean(total_dailysteps[,2], na.rm=TRUE)
+mean(num_total, na.rm=TRUE)
 ```
 
 ```
@@ -159,7 +148,7 @@ mean(total_dailysteps[,2], na.rm=TRUE)
 ```
 
 ```r
-median(total_dailysteps[,2], na.rm=TRUE)
+median(num_total, na.rm=TRUE)
 ```
 
 ```
@@ -183,8 +172,12 @@ Now group the data by weekday or weekend, and by time interval. Find the average
 ```r
 groupedsteps<-group_by(activity, sort, interval)
 totalgroupedsteps<-summarise(groupedsteps, mean(steps))
-xyplot(totalgroupedsteps[,3] ~ totalgroupedsteps[,2] | sort, 
-       totalgroupedsteps, layout = c(1, 2), type = "b", pch = "", 
+sort<-unlist(totalgroupedsteps[,1])
+interval<-unlist(totalgroupedsteps$interval)
+avg_steps<-unlist((totalgroupedsteps$mean))
+intervaldf<-data.frame(sort, interval, avg_steps)
+xyplot(avg_steps ~ interval | sort, 
+       intervaldf, layout = c(1, 2), type = "b", pch = "", 
        xlab ="5-Minute Interval Throughout Day", 
        ylab ="Average Number of Steps", 
        main = "Average Daily Activity Pattern")
